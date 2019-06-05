@@ -1430,7 +1430,7 @@ class Utility_forms {
 		
 		if($this->CI->uri->segment(3)){
 			
-			$this->get_add_form_type();
+			//$this->get_add_form_type();
 			
 			if($this->CI->uri->segment(3) == 'view' || $this->CI->uri->segment(3) == 'edit'){
 				$this->form_type = 'single_column';

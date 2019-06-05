@@ -25,6 +25,8 @@ class Welcome extends CI_Controller {
 		
 		$lib->set_fields_to_show_on_edit(array('firstname','lastname','email','profile_name'));
 		
+		$lib->set_fields_to_show_on_add(array('firstname','lastname','email','profile_name'));
+		
 		$lib->set_display_as(array('firstname'=>'User First Name','lastname'=>'User Last Name'));
 		
 		$lib->set_add_form_type('multi_column');
