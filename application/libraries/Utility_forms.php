@@ -628,7 +628,7 @@ class Utility_forms {
 			$joined_table = "";
 			$primary_key_field = "";
 			
-			$this->set_internal_debug($this->join );
+			//$this->set_internal_debug($this->join );
 			
 			foreach ($this->join as $join_table => $join_keys) {
 				$fields_for_joined_table = array_column($this -> CI -> db -> field_data($join_table), 'name');
@@ -1426,7 +1426,27 @@ class Utility_forms {
 		
 		$this->CI->db->trans_start();
 		
-		$this->CI->db->insert($this->db_table,$this->CI->input->post());
+		if($this->form_type == 'single_column'){
+			$this->CI->db->insert($this->db_table,$this->CI->input->post());
+		}elseif($this->form_type == 'multi_column'){
+			
+			$full_post_array = $this->CI->input->post();
+						
+			$array_width = count(array_shift($this->CI->input->post()));
+			
+			$array_keys = array_keys($full_post_array);
+			
+			$batch_array = array();
+			
+			for($i=0;$i<$array_width;$i++){
+				foreach($array_keys as $field){
+					$batch_array[$i][$field] = $full_post_array[$field][$i];
+				}
+			}
+			
+			$this->CI->db->insert_batch($this->db_table, $batch_array);
+		}
+		
 		
 		if ($this->CI->db->trans_status() === FALSE)
 		{
@@ -1486,11 +1506,6 @@ class Utility_forms {
 	// }
 
 	function render() {
-		
-		//$this->_get_db_transaction_flag();
-		//$this->_get_db_transaction_message();
-		
-		//$this -> set_internal_debug($this->db_transaction_message);
 		
 		$output = "";
 		

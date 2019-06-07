@@ -29,7 +29,7 @@ class Welcome extends CI_Controller {
 		
 		$lib->set_display_as(array('firstname'=>'User First Name','lastname'=>'User Last Name'));
 		
-		$lib->set_add_form_type('single_column');
+		$lib->set_add_form_type('multi_column');
 		
 		$lib->set_debug_mode(1);
 		
