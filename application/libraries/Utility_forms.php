@@ -627,13 +627,16 @@ class Utility_forms {
 
 			$joined_table = "";
 			$primary_key_field = "";
-
+			
+			$this->set_internal_debug($this->join );
+			
 			foreach ($this->join as $join_table => $join_keys) {
 				$fields_for_joined_table = array_column($this -> CI -> db -> field_data($join_table), 'name');
 
 				if (in_array($fields, $fields_for_joined_table)) {
 					$joined_table = $join_table;
-					$primary_key_field = $this -> _get_primary_key_field($join_table);
+					
+					$primary_key_field = $join_keys[1];//$this -> _get_primary_key_field($join_table);
 					
 					$change_name_on_multi_form = $primary_key_field;
 					
