@@ -19,19 +19,23 @@ class Welcome extends CI_Controller {
 		'login_type'=>array('login_type_id','login_type_id')
 		));
 		
-		$lib->set_fields_to_show(array('firstname','lastname','email','phone','profile_name','login_type_name'));
+		$lib->set_fields_to_show(array('firstname','lastname','email','phone','profile_name','login_type_name','comment'));
 		
-		$lib->set_fields_to_show_on_view(array('firstname','lastname','email','profile_name'));
+		$lib->set_fields_to_show_on_view(array('firstname','lastname','email','profile_name','comment'));
 		
-		$lib->set_fields_to_show_on_edit(array('firstname','lastname','email','profile_name'));
+		$lib->set_fields_to_show_on_edit(array('firstname','lastname','email','profile_name','phone','comment'));
 		
-		$lib->set_fields_to_show_on_add(array('firstname','lastname','email','phone','profile_name','login_type_name'));
+		$lib->set_fields_to_show_on_add(array('firstname','lastname','email','phone','profile_name','login_type_name','comment'));
 		
 		$lib->set_display_as(array('firstname'=>'User First Name','lastname'=>'User Last Name'));
 		
-		$lib->set_add_form_type('multi_column');
+		$lib->set_add_form_type('single_column');
 		
 		$lib->set_debug_mode(1);
+		
+		$lib->set_required_fields(array('firstname','phone','profile_id'));
+		
+		$lib->set_change_field_type(array('comment'=>'textarea'));//Still in development
 		
 		$page_data['output'] = $lib->render();
 		$page_data['page_name'] = 'output_page';

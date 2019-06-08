@@ -554,7 +554,13 @@ class Utility_forms {
 	private function _get_primary_table_fields() {
 		return array_column($this -> CI -> db -> field_data($this -> db_table), 'name');
 	}
-
+	
+	private $change_field_type = array();
+	
+	public function set_change_field_type($change_field_type){
+		$this->change_field_type = array_merge($this->change_field_type,$change_field_type);
+	}
+	
 	private function create_single_column_add_form() {
 		if ($this -> form_output_string !== "")
 			$this -> form_output_string = "";
@@ -583,8 +589,8 @@ class Utility_forms {
 				<div class='col-xs-8'>";
 
 			$output_string .= "<div class='col-xs-8'>";
-
-			$output_string .= $this -> _get_add_field_input_type($fields);
+			
+			$output_string .= $this->_change_field_type($fields);
 
 			$output_string .= "</div>";
 
@@ -616,8 +622,14 @@ class Utility_forms {
 		if ($this -> form_type == 'multi_column') {
 			$change_name_on_multi_form = $fields . '[]';
 		}
-
-		$element = array('label' => $fields, 'element' => 'input', 'properties' => array('class' => '', 'name' => $change_name_on_multi_form, 'value' => $value));
+		
+		$is_required_field = '';
+		
+		if(in_array($fields, $this->required_fields)){
+			$is_required_field = 'required';
+		} 
+		
+		$element = array('label' => $fields, 'element' => 'input', 'properties' => array('class' => '', 'name' => $change_name_on_multi_form, 'value' => $value,$is_required_field));
 
 		$output_string_input = $this -> create_input_field($element);
 
@@ -643,18 +655,37 @@ class Utility_forms {
 					if ($this -> form_type == 'multi_column') {
 						$change_name_on_multi_form = $primary_key_field . '[]';
 					}
+
+					if(in_array($primary_key_field, $this->required_fields)){
+						$is_required_field = 'required';
+					}
 				}
 			}
 
 			$this -> set_dropdown_from_table(array($joined_table, $primary_key_field, $fields, $primary_key_field));
 
-			$element = array('label' => $fields, 'element' => 'select', 'properties' => array('class' => '', 'name' => $change_name_on_multi_form), 'options' => $this -> dropdown_element_type[1]);
+			$element = array('label' => $fields, 'element' => 'select', 'properties' => array('class' => '', 'name' => $change_name_on_multi_form,$is_required_field), 'options' => $this -> dropdown_element_type[1]);
 
 			$output_string_input = $this -> create_select_field($element);
 		}
+
 		return $output_string_input;
 	}
-
+	
+	private function _change_field_type($fields,$value = ""){
+		
+		$output_string = "";
+		
+		if(array_key_exists($fields, $this->change_field_type)){
+				$elem = array('element'=>$this->change_field_type[$fields],'properties'=>array('id'=>'','name'=>$fields,'class'=>'form-control','innerHTML'=>$value));
+				$output_string .= $this -> create_closed_html_tag($elem);
+			}else{
+				$output_string .= $this -> _get_add_field_input_type($fields,$value);
+			}
+		
+		return $output_string;	
+	}
+	
 	private function create_multi_column_add_form() {
 
 		if ($this -> form_output_string !== "")
@@ -711,8 +742,8 @@ class Utility_forms {
 
 		foreach ($this->_get_fields_names_from_table_result() as $fields) {
 			$output_string .= "<td>";
-
-			$output_string .= $this -> _get_add_field_input_type($fields);
+			
+			$output_string .= $this->_change_field_type($fields);
 
 			$output_string .= "</td>";
 		}
@@ -1287,7 +1318,8 @@ class Utility_forms {
 
 			$output_string .= "<div class='col-xs-8'>";
 
-			$output_string .= $this -> _get_add_field_input_type($fields, $db_result[0][$fields]);
+			//$output_string .= $this -> _get_add_field_input_type($fields, $db_result[0][$fields]);
+			$output_string .= $this->_change_field_type($fields,$db_result[0][$fields]);
 
 			$output_string .= "</div>";
 
@@ -1497,14 +1529,12 @@ class Utility_forms {
 		$this->CI->db->delete($this->db_table);
 	}
 	
-	// private function _get_db_transaction_flag(){
-		// return $this->db_transaction_success_flag;
-	// }
-// 	
-	// private function _get_db_transaction_message(){
-		// return $this->db_transaction_message;
-	// }
-
+	private $required_fields = array();
+	
+	public function set_required_fields($required_fields){
+		$this->required_fields = $required_fields;
+	}
+	
 	function render() {
 		
 		$output = "";
