@@ -97,7 +97,7 @@ class Utility_forms {
 	 *
 	 */
 
-	private $initial_row_count = 1;
+	//private $initial_row_count = 1;
 
 	/**
 	 *
@@ -238,9 +238,9 @@ class Utility_forms {
 	 * @return Void
 	 */
 
-	function set_initial_row_count($row_count = "") {
-		$this -> initial_row_count = $row_count;
-	}
+	// function set_initial_row_count($row_count = "") {
+		// $this -> initial_row_count = $row_count;
+	// }
 
 	/**
 	 * Get Initial Row Count
@@ -251,9 +251,9 @@ class Utility_forms {
 	 * @return Integer
 	 */
 
-	private function get_initial_row_count() {
-		return $this -> initial_row_count;
-	}
+	// private function get_initial_row_count() {
+		// return $this -> initial_row_count;
+	// }
 
 	/**
 	 * Form Open Tag
@@ -581,7 +581,7 @@ class Utility_forms {
 							</li>
 										
 						</ul></div></div>";
-
+		$this->set_internal_debug($this->dropdown_element_type);
 		foreach ($this->fields as $fields) {
 
 			$output_string .= "<div class='form-group'>
@@ -616,7 +616,7 @@ class Utility_forms {
 	}
 
 	private function _get_add_field_input_type($fields, $value = "") {
-
+			
 		$change_name_on_multi_form = $fields;
 
 		if ($this -> form_type == 'multi_column') {
@@ -664,7 +664,19 @@ class Utility_forms {
 
 			$this -> set_dropdown_from_table(array($joined_table, $primary_key_field, $fields, $primary_key_field));
 
-			$element = array('label' => $fields, 'element' => 'select', 'properties' => array('class' => '', 'name' => $change_name_on_multi_form,$is_required_field), 'options' => $this -> dropdown_element_type[1]);
+			$element = array('label' => $fields, 'element' => 'select', 'properties' => array('class' => '', 'name' => $change_name_on_multi_form,$is_required_field), 'options' => $this -> dropdown_element_type[$primary_key_field]);
+
+			$output_string_input = $this -> create_select_field($element);
+			
+		}elseif(array_key_exists($fields, $this->dropdown_element_type)){
+			
+			$is_required_field = "";
+			
+			if(in_array($fields, $this->required_fields)){
+				$is_required_field = 'required';
+			}
+			
+			$element = array('label' => $fields, 'element' => 'select', 'properties' => array('class' => '', 'name' => $fields,$is_required_field), 'options' => $this -> dropdown_element_type[$fields]);
 
 			$output_string_input = $this -> create_select_field($element);
 		}
@@ -1142,8 +1154,8 @@ class Utility_forms {
 		$rows_with_primary_key_as_key = array();
 
 		foreach ($db_result as $row) {
-			$primary_key = $row['user_id'];
-			unset($row['user_id']);
+			$primary_key = $row[$this->_get_primary_key_field()];
+			unset($row[$this->_get_primary_key_field()]);
 			$rows_with_primary_key_as_key[$primary_key] = $row;
 		}
 
@@ -1165,10 +1177,16 @@ class Utility_forms {
 		foreach ($yes_nos as $key => $yes_no) {
 			$yes_no_options[$key]['option'] = $yes_no;
 		}
-
-		$dropdown_element_type = array($field_name, $yes_no_options);
-
-		$this -> dropdown_element_type = $dropdown_element_type;
+		
+		if(is_array($field_name)){
+			foreach($field_name as $field){
+				$dropdown_element_type[$field] = $yes_no_options;		
+				$this -> dropdown_element_type = array_merge($this -> dropdown_element_type,$dropdown_element_type);				
+			}
+		}else{
+			$dropdown_element_type[$field_name] = $yes_no_options;	
+			$this -> dropdown_element_type = array_merge($this -> dropdown_element_type,$dropdown_element_type);
+		}
 	}
 
 	public function set_dropdown_from_range($field_name_and_range_array) {
@@ -1185,10 +1203,11 @@ class Utility_forms {
 			$range_options[$key]['option'] = $value;
 		}
 
-		$dropdown_element_type = array($field_name_and_range_array[0], $range_options);
+		$dropdown_element_type[$field_name_and_range_array[0]] = $range_options;
 
-		$this -> dropdown_element_type[] = $dropdown_element_type;
+		$this -> dropdown_element_type = $dropdown_element_type;
 	}
+	
 
 	public function set_dropdown_from_table($table_details = array()) {
 
@@ -1217,9 +1236,9 @@ class Utility_forms {
 			}
 		}
 
-		$dropdown_element_type = array($select_field_name, $options_array);
-
-		$this -> dropdown_element_type = $dropdown_element_type;
+		$dropdown_element_type[$select_field_name] = $options_array;
+		
+		$this -> dropdown_element_type = array_merge($this -> dropdown_element_type,$dropdown_element_type);
 
 	}
 
@@ -1260,9 +1279,13 @@ class Utility_forms {
 
 			$output_string .= "<div class='col-xs-8'>";
 
-			//$output_string .= $this->_get_add_field_input_type($fields);
-
-			$element = array('label' => $fields, 'element' => 'div', 'properties' => array('class' => '', 'name' => $fields, 'innerHTML' => $db_result[0][$fields]));
+			$innerhtmlval = $db_result[0][$fields];
+			
+			if(array_key_exists($fields, $this->dropdown_element_type)){
+				$innerhtmlval = $db_result[0][$fields] = $this->dropdown_element_type[$fields][$innerhtmlval]['option'];
+			}
+			
+			$element = array('label' => $fields, 'element' => 'div', 'properties' => array('class' => '', 'name' => $fields, 'innerHTML' => $innerhtmlval));
 
 			$output_string .= $this -> create_closed_html_tag($element);
 
@@ -1276,8 +1299,6 @@ class Utility_forms {
 
 		$output_string .= $this -> close_panel();
 
-		//$this->set_internal_debug($this->db_results());
-
 		if ($this -> debug_mode != 0) {
 			$output_string .= $this -> show_debug_mode();
 		}
@@ -1290,8 +1311,6 @@ class Utility_forms {
 			$this -> form_output_string = "";
 
 		$this -> view_or_edit_mode = 'edit';
-
-		//$this->set_where_clause(array($this->_get_primary_key_field()=>$this->CI->uri->segment(4)));
 
 		$db_result = $this -> db_results();
 
@@ -1318,7 +1337,6 @@ class Utility_forms {
 
 			$output_string .= "<div class='col-xs-8'>";
 
-			//$output_string .= $this -> _get_add_field_input_type($fields, $db_result[0][$fields]);
 			$output_string .= $this->_change_field_type($fields,$db_result[0][$fields]);
 
 			$output_string .= "</div>";
@@ -1392,15 +1410,15 @@ class Utility_forms {
 		return $this -> view_or_edit_mode;
 	}
 
-	private $hidden_fields = array();
-
-	function set_hidden_fields($hidden_fields) {
-		$this -> hidden_fields = $hidden_fields;
-	}
-
-	private function get_hidden_fields() {
-		return $this -> hidden_fields;
-	}
+	// private $hidden_fields = array();
+// 
+	// function set_hidden_fields($hidden_fields) {
+		// $this -> hidden_fields = $hidden_fields;
+	// }
+// 
+	// private function get_hidden_fields() {
+		// return $this -> hidden_fields;
+	// }
 
 	private $hide_delete_button = false;
 
@@ -1454,31 +1472,75 @@ class Utility_forms {
 	
 	private $db_transaction_success_flag = false;
 	
+	private $callback_insert = null;
+	private $callback_before_insert = null;
+	private $callback_after_insert = null;
+
+	public function callback_insert($callback = null)
+	{
+		$this->callback_insert = $callback;
+
+		return $this;
+	}
+	
+	public function callback_before_insert($callback = null)
+	{
+		$this->callback_before_insert = $callback;
+
+		return $this;
+	}		
+	
+	public function callback_after_insert($callback = null)
+	{
+		$this->callback_after_insert = $callback;
+
+		return $this;
+	}
+	
 	function save_form_data(){
+		
 		
 		$this->CI->db->trans_start();
 		
-		if($this->form_type == 'single_column'){
-			$this->CI->db->insert($this->db_table,$this->CI->input->post());
-		}elseif($this->form_type == 'multi_column'){
-			
-			$full_post_array = $this->CI->input->post();
-						
-			$array_width = count(array_shift($this->CI->input->post()));
-			
-			$array_keys = array_keys($full_post_array);
-			
-			$batch_array = array();
-			
-			for($i=0;$i<$array_width;$i++){
-				foreach($array_keys as $field){
-					$batch_array[$i][$field] = $full_post_array[$field][$i];
-				}
-			}
-			
-			$this->CI->db->insert_batch($this->db_table, $batch_array);
-		}
+		if($this->callback_insert != null){
+			call_user_func($this->callback_insert,$this->CI->input->post());
+		}else{
+			if($this->form_type == 'single_column'){
+				
+				$post_data = $this->CI->input->post();
+				
+				if($this->callback_before_insert != null){
+					$post_data  = call_user_func($this->callback_before_insert,$this->CI->input->post());
+				}	
+				
+				$this->CI->db->insert($this->db_table,$post_data);
 		
+				$insert_id = $this->CI->db->insert_id();
+					
+				if($this->callback_after_insert != null){							
+					call_user_func($this->callback_after_insert,$this->CI->input->post(),$insert_id);
+				}
+					
+				
+			}elseif($this->form_type == 'multi_column'){
+				
+				$full_post_array = $this->CI->input->post();
+							
+				$array_width = count(array_shift($this->CI->input->post()));
+				
+				$array_keys = array_keys($full_post_array);
+				
+				$batch_array = array();
+				
+				for($i=0;$i<$array_width;$i++){
+					foreach($array_keys as $field){
+						$batch_array[$i][$field] = $full_post_array[$field][$i];
+					}
+				}
+				
+				$this->CI->db->insert_batch($this->db_table, $batch_array);
+			}
+		}	
 		
 		if ($this->CI->db->trans_status() === FALSE)
 		{
@@ -1535,8 +1597,24 @@ class Utility_forms {
 		$this->required_fields = $required_fields;
 	}
 	
+	private function _check_get_primary_key_field_of_join_in_ref_to_primary_field($field){
+		
+		$primary_key_field = "";
+		
+		foreach ($this->join as $join_table => $join_keys) {
+				$fields_for_joined_table = array_column($this -> CI -> db -> field_data($join_table), 'name');
+	
+					if (in_array($field, $fields_for_joined_table)) {						
+						$primary_key_field = $join_keys[1];
+					}
+		}
+		
+		return $primary_key_field;			
+	}
+	
 	function render() {
 		
+
 		$output = "";
 		
 		if ($this -> form_output_string !== "")
@@ -1662,7 +1740,15 @@ class Utility_forms {
 						</td>";
 
 			foreach ($row as $key => $td_value) {
-
+					
+				if($this->_check_get_primary_key_field_of_join_in_ref_to_primary_field($key) != ""){
+					$key = $this->_check_get_primary_key_field_of_join_in_ref_to_primary_field($key);
+				}
+				 
+				if(array_key_exists($key, $this->dropdown_element_type)){
+					$td_value = $this->dropdown_element_type[$key][$td_value]['option'];
+				}
+				
 				$output .= "<td>" . $td_value . "</td>";
 
 			}
